@@ -1,15 +1,20 @@
+import time
 from backend.agent.agent import agent
+
+start = time.perf_counter()
 
 result = agent.invoke(
     {
         "messages": [
             {
                 "role": "user",
-                "content": "What is the current state of parcel PAR-003?",
+                "content": "Show me all parcel overlaps.",
             }
         ]
     }
 )
+
+elapsed = time.perf_counter() - start
 
 final_message = result["messages"][-1]
 
