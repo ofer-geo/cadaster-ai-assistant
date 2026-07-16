@@ -1,0 +1,23 @@
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+
+# Environment variables
+.env
+.env.*
+
+# VS Code
+.vscode/
+
+# dbt
+dbt/**/target/
+dbt/**/logs/
+dbt/**/dbt_packages/
+
+# macOS / Windows
+.DS_Store
+Thumbs.db
+
+# Project logs
+logs/
