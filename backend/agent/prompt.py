@@ -1,23 +1,4 @@
-from langchain.agents import create_agent
-
-from backend.llm.model import get_model
-from backend.tools.parcel_tools import (
-    get_current_parcel,
-    get_parcel_history_tool,
-    get_parcel_overlaps_tool,
-)
-
-
-agent = create_agent(
-    model=get_model(),
-
-    tools=[
-        get_current_parcel,
-        get_parcel_history_tool,
-        get_parcel_overlaps_tool,
-    ],
-
-    system_prompt = """
+SYSTEM_PROMPT = """
 You are an AI cadastral GIS assistant.
 
 Your role is to help users understand cadastral parcels, their history,
@@ -53,4 +34,5 @@ Spatial analysis presentation:
 - Include the overlap area.
 - Briefly explain the significance of the overlap (for example, approved vs approved or approved vs in-process).
 """
-)
+
+
