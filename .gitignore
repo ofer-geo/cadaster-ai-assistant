@@ -1,23 +1,45 @@
+# -------------------------
 # Python
+# -------------------------
 .venv/
-__pycache__/
+**/__pycache__/
 *.py[cod]
+*.pyd
 
+# -------------------------
 # Environment variables
+# -------------------------
 .env
 .env.*
 
-# VS Code
-.vscode/
+# -------------------------
+# React / Node
+# -------------------------
+**/node_modules/
+**/dist/
 
+# -------------------------
 # dbt
+# -------------------------
 dbt/**/target/
 dbt/**/logs/
 dbt/**/dbt_packages/
 
+# -------------------------
+# Project logs
+# -------------------------
+logs/
+**/logs/
+*.log
+
+# -------------------------
+# VS Code
+# -------------------------
+.vscode/
+!.vscode/extensions.json
+
+# -------------------------
 # macOS / Windows
+# -------------------------
 .DS_Store
 Thumbs.db
-
-# Project logs
-logs/

@@ -235,10 +235,12 @@ def get_parcel_overlaps(
 
             parcel_uid_1,
             plot_number_1,
+            parcel_version_id_1,
             status_1,
 
             parcel_uid_2,
             plot_number_2,
+            parcel_version_id_2,
             status_2,
 
             district_name_1,
@@ -259,3 +261,75 @@ def get_parcel_overlaps(
         with conn.cursor(row_factory=dict_row) as cur:
             cur.execute(query, tuple(parameters))
             return cur.fetchall()
+
+
+
+def get_parcels_geojson(
+    parcel_version_ids: list[int],
+) -> dict:
+    """Return selected parcel versions as a GeoJSON FeatureCollection."""
+
+    if not parcel_version_ids:
+        return {
+            "type": "FeatureCollection",
+            "features": [],
+        }
+
+    with get_connection() as conn:
+        with conn.cursor(row_factory=dict_row) as cur:
+            cur.execute(
+                """
+                SELECT
+                    parcel_version_id,
+                    parcel_uid,
+                    plot_number,
+                    status,
+                    valid_from,
+                    valid_to,
+                    district_id,
+                    district_name,
+                    ST_AsGeoJSON(
+                        ST_Transform(geom, 4326)
+                    )::json AS geometry
+                FROM analytics.mart_parcel_history
+                WHERE parcel_version_id = ANY(%s)
+                ORDER BY parcel_version_id
+                """,
+                (parcel_version_ids,),
+            )
+
+            rows = cur.fetchall()
+
+    features = []
+
+    for row in rows:
+        features.append(
+            {
+                "type": "Feature",
+                "id": row["parcel_version_id"],
+                "geometry": row["geometry"],
+                "properties": {
+                    "parcel_version_id": row["parcel_version_id"],
+                    "parcel_uid": row["parcel_uid"],
+                    "plot_number": row["plot_number"],
+                    "status": row["status"],
+                    "valid_from": (
+                        row["valid_from"].isoformat()
+                        if row["valid_from"] is not None
+                        else None
+                    ),
+                    "valid_to": (
+                        row["valid_to"].isoformat()
+                        if row["valid_to"] is not None
+                        else None
+                    ),
+                    "district_id": row["district_id"],
+                    "district_name": row["district_name"],
+                },
+            }
+        )
+
+    return {
+        "type": "FeatureCollection",
+        "features": features,
+    }

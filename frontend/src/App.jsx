@@ -1,4 +1,6 @@
-import { useState } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import { useEffect, useRef, useState } from "react";
 import "./App.css";
 
 function App() {
@@ -11,6 +13,13 @@ function App() {
 
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const messagesEndRef = useRef(null);
+
+  useEffect(() => {
+  messagesEndRef.current?.scrollIntoView({
+    behavior: "smooth",
+  });
+}, [messages, isLoading]);
 
   async function sendMessage() {
     const trimmedInput = input.trim();
@@ -89,46 +98,56 @@ function App() {
         <p>Ask questions about parcels, applications, and cadastral data.</p>
       </header>
 
-      <main className="chat-container">
-        <div className="messages">
-          {messages.map((message, index) => (
-            <div
-              key={index}
-              className={`message ${message.role}`}
+      <main className="main-layout">
+        <section className="chat-panel">
+          <div className="messages">
+            {messages.map((message, index) => (
+              <div
+                key={index}
+                className={`message ${message.role}`}
+              >
+                <span className="message-label">
+                  {message.role === "user" ? "You" : "Assistant"}
+                </span>
+                <div className="message-content">
+                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                    {message.text}
+                  </ReactMarkdown>
+                </div>
+              </div>
+            ))}
+
+            {isLoading && (
+              <div className="message assistant">
+                <div className="typing-indicator">
+                  <span></span>
+                  <span></span>
+                  <span></span>
+                </div>
+              </div>
+            )}
+            <div ref={messagesEndRef} />
+          </div>
+
+          <div className="input-area">
+            <input
+              type="text"
+              value={input}
+              placeholder="Ask about a parcel..."
+              onChange={(event) => setInput(event.target.value)}
+              onKeyDown={handleKeyDown}
+              disabled={isLoading}
+            />
+
+            <button
+              onClick={sendMessage}
+              disabled={isLoading}
             >
-              <span className="message-label">
-                {message.role === "user" ? "You" : "Assistant"}
-              </span>
-
-              <p>{message.text}</p>
-            </div>
-          ))}
-
-          {isLoading && (
-            <div className="message assistant">
-              <span className="message-label">Assistant</span>
-              <p>Thinking...</p>
-            </div>
-          )}
-        </div>
-
-        <div className="input-area">
-          <input
-            type="text"
-            value={input}
-            placeholder="Ask about a parcel..."
-            onChange={(event) => setInput(event.target.value)}
-            onKeyDown={handleKeyDown}
-            disabled={isLoading}
-          />
-
-          <button
-            onClick={sendMessage}
-            disabled={isLoading}
-          >
-            {isLoading ? "Sending..." : "Send"}
-          </button>
-        </div>
+              {isLoading ? "Sending..." : "Send"}
+            </button>
+          </div>
+        </section>
+        <section className="map-panel"/>
       </main>
     </div>
   );

@@ -15,7 +15,7 @@ input {
 }
 
 .app {
-  min-height: 100vh;
+  height: 100vh;
   display: flex;
   flex-direction: column;
 }
@@ -36,22 +36,13 @@ input {
   color: #627d98;
 }
 
-.chat-container {
-  width: 100%;
-  max-width: 900px;
-  margin: 0 auto;
-  padding: 24px;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-}
-
 .messages {
   flex: 1;
   display: flex;
   flex-direction: column;
   gap: 16px;
-  margin-bottom: 24px;
+  overflow-y: auto;
+  padding: 24px;
 }
 
 .message {
@@ -86,6 +77,9 @@ input {
 .input-area {
   display: flex;
   gap: 12px;
+  padding: 20px;
+  border-top: 1px solid #d9e2ec;
+  background: white;
 }
 
 .input-area input {
@@ -111,4 +105,110 @@ input {
 
 .input-area button:hover {
   background: #243b53;
+}
+
+.message-content p {
+  margin: 0 0 10px;
+  line-height: 1.6;
+}
+
+.message-content p:last-child {
+  margin-bottom: 0;
+}
+
+.message-content ul,
+.message-content ol {
+  margin: 8px 0;
+  padding-left: 24px;
+}
+
+.message-content li {
+  margin-bottom: 5px;
+}
+
+.message-content table {
+  width: 100%;
+  margin-top: 12px;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.message-content th,
+.message-content td {
+  padding: 10px 12px;
+  border: 1px solid #d9e2ec;
+  text-align: left;
+}
+
+.message-content th {
+  background: #f0f4f8;
+  font-weight: 600;
+}
+
+.message-content tr:nth-child(even) {
+  background: #f8fafc;
+}
+
+.typing-indicator {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 0;
+  min-height: 18px;
+}
+
+.typing-indicator span {
+  display: block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background-color: #627d98;
+  animation: typing-bounce 1.2s infinite ease-in-out;
+}
+
+.typing-indicator span:nth-child(2) {
+  animation-delay: 0.15s;
+}
+
+.typing-indicator span:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+@keyframes typing-bounce {
+  0%,
+  60%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.4;
+  }
+
+  30% {
+    transform: translateY(-5px);
+    opacity: 1;
+  }
+}
+
+.main-layout {
+  flex: 1;
+  display: flex;
+  min-height: 0;
+}
+
+.chat-panel {
+  width: 420px;
+  min-width: 420px;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid #d9e2ec;
+  background: white;
+}
+
+.map-panel {
+  flex: 1;
+  background: #eef3f8;
+}
+
+.messages {
+  flex: 1;
+  overflow-y: auto;
 }

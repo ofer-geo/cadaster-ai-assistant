@@ -1,8 +1,4 @@
-from uuid import uuid4
-
-from backend.agent.agent_factory import create_cadaster_agent
-
-
+import json
 from uuid import uuid4
 
 from backend.agent.assistant import CadasterAssistant
@@ -38,7 +34,15 @@ def run_conversation() -> None:
                 thread_id=thread_id,
             )
 
-            print(f"\nAgent: {response.answer}\n")
+            print(f"\nAgent: {response.answer}")
+
+            print("\nParcel version IDs:")
+            print(response.parcel_version_ids)
+
+            print("\nGeoJSON:")
+            print(json.dumps(response.geojson, indent=2))
+
+            print()
 
         except Exception as exc:
             print(f"\nError: {exc}\n")
