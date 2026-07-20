@@ -1,31 +1,21 @@
 select
-    p.parcel_version_id,
-    p.parcel_uid,
-    p.plot_number,
-    p.parent_parcel_uid,
-    p.status,
-    p.valid_from,
-    p.valid_to,
+    parcel_version_id,
+    parcel_uid,
+    plot_number,
+    parent_parcel_uid,
+    status,
+    valid_from,
+    valid_to,
 
-    p.valid_to is null as is_current,
+    true as is_current,
 
-    (
-        p.valid_to is null
-        and p.status = 'approved'
-    ) as is_current_approved,
+    status = 'approved' as is_current_approved,
 
-    (
-        p.valid_to is null
-        and p.status = 'in_process'
-    ) as is_current_in_process,
+    status = 'in_process' as is_current_in_process,
 
-    p.district_id,
-    d.district_name,
-    p.geom
+    district_id,
+    district_name
 
-from {{ ref('stg_parcels') }} p
+from {{ ref('mart_parcel_history') }}
 
-left join {{ ref('stg_districts') }} d
-    on p.district_id = d.district_id
-
-where p.valid_to is null
+where valid_to is null

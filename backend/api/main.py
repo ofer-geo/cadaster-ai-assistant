@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 from backend.agent.assistant import CadasterAssistant
+from backend.database.repository import get_current_parcels_geojson
 
 
 app = FastAPI(
@@ -42,6 +43,17 @@ def root() -> dict[str, str]:
     return {
         "message": "Cadaster AI Assistant API is running."
     }
+
+@app.get("/parcels/current/geojson")
+def current_parcels_geojson() -> dict:
+    try:
+        return get_current_parcels_geojson()
+
+    except Exception as exc:
+        raise HTTPException(
+            status_code=500,
+            detail="Could not load current parcels.",
+        ) from exc
 
 
 @app.post("/chat", response_model=ChatResponse)

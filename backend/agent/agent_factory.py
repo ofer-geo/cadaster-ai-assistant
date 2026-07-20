@@ -5,7 +5,9 @@ from backend.agent.prompt import SYSTEM_PROMPT
 from backend.llm.model import get_model
 from backend.tools.parcel_tools import (
     get_current_parcel,
+    get_parcel_statistics_tool,
     get_parcel_history_tool,
+    get_parcels_by_area,
     get_parcel_overlaps_tool,
 )
 
@@ -22,7 +24,9 @@ def create_cadaster_agent():
 
     tools = [
         get_current_parcel,
+        get_parcel_statistics_tool,
         get_parcel_history_tool,
+        get_parcels_by_area,
         get_parcel_overlaps_tool,
     ]
 

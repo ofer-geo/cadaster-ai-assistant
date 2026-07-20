@@ -20,5 +20,10 @@ from {{ ref('mart_parcel_history') }} child
 
 left join {{ ref('mart_parcel_history') }} parent
     on child.parent_parcel_uid = parent.parcel_uid
+    and parent.valid_from <= child.valid_from
+    and (
+        parent.valid_to is null
+        or parent.valid_to >= child.valid_from
+    )
 
 where child.parent_parcel_uid is not null

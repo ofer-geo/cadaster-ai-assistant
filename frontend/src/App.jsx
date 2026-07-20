@@ -1,6 +1,7 @@
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { useEffect, useRef, useState } from "react";
+import MapPanel from "./MapPanel";
 import "./App.css";
 
 function App() {
@@ -13,13 +14,38 @@ function App() {
 
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [geojson, setGeojson] = useState({
+    type: "FeatureCollection",
+    features: [],
+  });
   const messagesEndRef = useRef(null);
 
   useEffect(() => {
-  messagesEndRef.current?.scrollIntoView({
-    behavior: "smooth",
-  });
-}, [messages, isLoading]);
+    messagesEndRef.current?.scrollIntoView({
+      behavior: "smooth",
+    });
+  }, [messages, isLoading]);
+
+  useEffect(() => {
+    async function loadCurrentParcels() {
+      try {
+        const response = await fetch(
+          "http://127.0.0.1:8000/parcels/current/geojson"
+        );
+
+        if (!response.ok) {
+          throw new Error("Failed to load parcels.");
+        }
+
+        const data = await response.json();
+        setGeojson(data);
+      } catch (error) {
+        console.error(error);
+      }
+    }
+
+    loadCurrentParcels();
+  }, []);
 
   async function sendMessage() {
     const trimmedInput = input.trim();
@@ -147,7 +173,9 @@ function App() {
             </button>
           </div>
         </section>
-        <section className="map-panel"/>
+        <section className="map-panel">
+          <MapPanel geojson={geojson} />
+        </section>
       </main>
     </div>
   );

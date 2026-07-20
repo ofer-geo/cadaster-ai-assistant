@@ -9,7 +9,7 @@ with current_parcels as (
         district_name,
         geom
 
-    from {{ ref('mart_current_parcels') }}
+    from {{ ref('mart_parcel_history') }}
 
     where valid_to is null
       and status in ('approved', 'in_process')
@@ -98,9 +98,7 @@ select
             * 100
         )::numeric,
         2
-    ) as overlap_percentage_2,
-
-    overlap_geom
+    ) as overlap_percentage_2
 
 from overlap_candidates
 

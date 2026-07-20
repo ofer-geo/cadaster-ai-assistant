@@ -333,3 +333,151 @@ def get_parcels_geojson(
         "type": "FeatureCollection",
         "features": features,
     }
+
+
+def get_current_parcels_geojson() -> dict:
+    """Return all current parcels as a GeoJSON FeatureCollection."""
+
+    with get_connection() as conn:
+        with conn.cursor(row_factory=dict_row) as cur:
+            cur.execute(
+                """
+                SELECT
+                    current_parcel.parcel_version_id,
+                    current_parcel.parcel_uid,
+                    current_parcel.plot_number,
+                    current_parcel.status,
+                    current_parcel.valid_from,
+                    current_parcel.valid_to,
+                    current_parcel.district_id,
+                    current_parcel.district_name,
+
+                    ST_AsGeoJSON(
+                        ST_Transform(history.geom, 4326)
+                    )::json AS geometry
+
+                FROM analytics.mart_current_parcels AS current_parcel
+
+                INNER JOIN analytics.mart_parcel_history AS history
+                    ON current_parcel.parcel_version_id =
+                       history.parcel_version_id
+
+                ORDER BY current_parcel.parcel_uid,
+                         current_parcel.status
+                """
+            )
+
+            rows = cur.fetchall()
+
+    features = []
+
+    for row in rows:
+        features.append(
+            {
+                "type": "Feature",
+                "id": row["parcel_version_id"],
+                "geometry": row["geometry"],
+                "properties": {
+                    "parcel_version_id": row["parcel_version_id"],
+                    "parcel_uid": row["parcel_uid"],
+                    "plot_number": row["plot_number"],
+                    "status": row["status"],
+                    "valid_from": (
+                        row["valid_from"].isoformat()
+                        if row["valid_from"] is not None
+                        else None
+                    ),
+                    "valid_to": (
+                        row["valid_to"].isoformat()
+                        if row["valid_to"] is not None
+                        else None
+                    ),
+                    "district_id": row["district_id"],
+                    "district_name": row["district_name"],
+                },
+            }
+        )
+
+    return {
+        "type": "FeatureCollection",
+        "features": features,
+    }
+
+def get_parcel_statistics(
+    status: str | None = None,
+    district_name: str | None = None,
+    lifecycle: str = "current",
+) -> dict:
+    """Return aggregate statistics for current, retired, or all parcels."""
+
+    allowed_lifecycles = {"current", "retired", "all"}
+
+    if lifecycle not in allowed_lifecycles:
+        raise ValueError(
+            f"Invalid lifecycle: {lifecycle}. "
+            f"Expected one of {sorted(allowed_lifecycles)}."
+        )
+
+    conditions: list[str] = []
+    parameters: list[str] = []
+
+    if lifecycle == "current":
+        conditions.append("parcel_history.valid_to IS NULL")
+
+    elif lifecycle == "retired":
+        conditions.append("parcel_history.valid_to IS NOT NULL")
+
+    if status:
+        conditions.append("parcel_history.status = %s")
+        parameters.append(status)
+
+    if district_name:
+        conditions.append("parcel_history.district_name ILIKE %s")
+        parameters.append(district_name)
+
+    where_clause = ""
+
+    if conditions:
+        where_clause = "WHERE " + " AND ".join(conditions)
+
+    query = f"""
+        SELECT
+            COUNT(*) AS parcel_count,
+
+            COUNT(*) FILTER (
+                WHERE parcel_history.valid_to IS NULL
+            ) AS current_count,
+
+            COUNT(*) FILTER (
+                WHERE parcel_history.valid_to IS NOT NULL
+            ) AS retired_count,
+
+            COUNT(*) FILTER (
+                WHERE parcel_history.status = 'approved'
+            ) AS approved_count,
+
+            COUNT(*) FILTER (
+                WHERE parcel_history.status = 'in_process'
+            ) AS in_process_count
+
+        FROM analytics.mart_parcel_history AS parcel_history
+        {where_clause}
+    """
+
+    with get_connection() as connection:
+        with connection.cursor() as cursor:
+            cursor.execute(query, parameters)
+            row = cursor.fetchone()
+
+    return {
+        "parcel_count": row[0],
+        "current_count": row[1],
+        "retired_count": row[2],
+        "approved_count": row[3],
+        "in_process_count": row[4],
+        "filters": {
+            "status": status,
+            "district_name": district_name,
+            "lifecycle": lifecycle,
+        },
+    }

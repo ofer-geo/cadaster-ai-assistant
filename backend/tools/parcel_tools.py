@@ -2,6 +2,8 @@ from langchain.tools import tool
 
 from backend.database.repository import (
     get_current_parcel_records,
+    get_parcel_statistics,
+    get_current_parcels_by_area,
     get_parcel_history,
     get_parcel_overlaps,
 )
@@ -76,4 +78,34 @@ def get_parcel_overlaps_tool(
         area_name=area_name,
         area_type=area_type,
         parcel_uid=parcel_uid,
+    )
+
+@tool
+def get_parcel_statistics_tool(
+    status: str | None = None,
+    district_name: str | None = None,
+    lifecycle: str = "current",
+) -> dict:
+    """Return parcel counts and aggregate statistics.
+
+    Use this when the user asks:
+    - how many current parcels exist;
+    - how many retired parcels exist;
+    - how many parcels ever existed;
+    - how many approved or in-process parcels exist;
+    - how many parcels exist in a district;
+    - how many retired parcels exist in a district.
+
+    Args:
+        status: Optional parcel status, such as approved or in_process.
+        district_name: Optional district name, for example Mjini.
+        lifecycle:
+            current for active parcel versions;
+            retired for historical parcel versions;
+            all for all parcel versions.
+    """
+    return get_parcel_statistics(
+        status=status,
+        district_name=district_name,
+        lifecycle=lifecycle,
     )
