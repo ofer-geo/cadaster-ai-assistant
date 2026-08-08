@@ -4,6 +4,8 @@ from pydantic import BaseModel
 
 from backend.agent.assistant import CadasterAssistant
 from backend.database.repository import get_current_parcels_geojson
+from typing import Any
+import os
 
 
 app = FastAPI(
@@ -13,8 +15,11 @@ app = FastAPI(
 
 # React currently runs on this address.
 allowed_origins = [
-    "http://localhost:5173",
-    "http://127.0.0.1:5173",
+    origin.strip()
+    for origin in os.getenv(
+        "ALLOWED_ORIGINS",
+        "http://localhost:5173,http://127.0.0.1:5173",
+    ).split(",")
 ]
 
 app.add_middleware(
@@ -36,6 +41,8 @@ class ChatRequest(BaseModel):
 class ChatResponse(BaseModel):
     answer: str
     thread_id: str
+    parcel_version_ids: list[int]
+    geojson: dict[str, Any]
 
 
 @app.get("/")
@@ -67,6 +74,8 @@ def chat(request: ChatRequest) -> ChatResponse:
         return ChatResponse(
             answer=result.answer,
             thread_id=result.thread_id,
+            parcel_version_ids=result.parcel_version_ids,
+            geojson=result.geojson,
         )
 
     except ValueError as exc:
@@ -80,3 +89,8 @@ def chat(request: ChatRequest) -> ChatResponse:
             status_code=500,
             detail="The assistant could not process the request.",
         ) from exc
+
+
+@app.get("/health")
+def health_check():
+    return {"status": "ok"}

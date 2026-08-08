@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 
@@ -20,11 +20,11 @@ function extendBounds(bounds, coordinates) {
 
   if (!Array.isArray(coordinates)) {
     return;
-    }
+  }
 
-    coordinates.forEach((coordinate) => {
+  coordinates.forEach((coordinate) => {
     extendBounds(bounds, coordinate);
-    });
+  });
 }
 
 function fitMapToGeojson(map, geojson) {
@@ -58,14 +58,90 @@ function escapeHtml(value) {
     .replaceAll("'", "&#039;");
 }
 
-function MapPanel({ geojson = EMPTY_GEOJSON, title = "Map Results" }) {
+function MapPanel({ 
+  geojson = EMPTY_GEOJSON, 
+  title = "Map Results",
+  selectedParcel = null, 
+}) {
   const mapContainerRef = useRef(null);
   const mapRef = useRef(null);
   const latestGeojsonRef = useRef(geojson);
+  const [clickedParcelUid, setClickedParcelUid] = useState(null);
 
   useEffect(() => {
     latestGeojsonRef.current = geojson;
   }, [geojson]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+
+    if (
+      !map ||
+      !map.isStyleLoaded() ||
+      !map.getLayer("selected-parcel-highlight")
+    ) {
+      return;
+    }
+
+    if (!selectedParcel?.parcelUid) {
+      map.setFilter("selected-parcel-highlight", [
+        "all",
+        ["==", ["geometry-type"], "Polygon"],
+        ["==", ["get", "parcel_uid"], ""],
+      ]);
+
+      return;
+    }
+
+    map.setFilter("selected-parcel-highlight", [
+      "all",
+      ["==", ["geometry-type"], "Polygon"],
+      ["==", ["get", "parcel_uid"], selectedParcel.parcelUid],
+    ]);
+
+    const selectedFeature = geojson.features.find(
+      (feature) =>
+        String(feature.properties?.parcel_uid ?? "").toUpperCase() ===
+      selectedParcel.parcelUid.toUpperCase()
+    );
+
+    if (!selectedFeature) {
+      return;
+    }
+
+    fitMapToGeojson(map, {
+      type: "FeatureCollection",
+      features: [selectedFeature],
+    });
+  }, [selectedParcel, geojson]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+
+    if (
+      !map ||
+      !map.isStyleLoaded() ||
+      !map.getLayer("clicked-parcel-highlight")
+    ) {
+      return;
+    }
+
+    if (!clickedParcelUid) {
+      map.setFilter("clicked-parcel-highlight", [
+        "all",
+        ["==", ["geometry-type"], "Polygon"],
+        ["==", ["get", "parcel_uid"], ""],
+      ]);
+
+      return;
+    }
+
+    map.setFilter("clicked-parcel-highlight", [
+      "all",
+      ["==", ["geometry-type"], "Polygon"],
+      ["==", ["get", "parcel_uid"], clickedParcelUid],
+    ]);
+  }, [clickedParcelUid]);
 
   useEffect(() => {
     if (mapRef.current || !mapContainerRef.current) {
@@ -153,6 +229,38 @@ function MapPanel({ geojson = EMPTY_GEOJSON, title = "Map Results" }) {
       });
 
       map.addLayer({
+        id: "selected-parcel-highlight",
+        type: "line",
+        source: "query-results",
+        filter: [
+          "all",
+          ["==", ["geometry-type"], "Polygon"],
+          ["==", ["get", "parcel_uid"], ""],
+        ],
+        paint: {
+          "line-color": "#f59e0b",
+          "line-width": 6,
+          "line-opacity": 1,
+        },
+      });
+
+      map.addLayer({
+        id: "clicked-parcel-highlight",
+        type: "line",
+        source: "query-results",
+        filter: [
+          "all",
+          ["==", ["geometry-type"], "Polygon"],
+          ["==", ["get", "parcel_uid"], ""],
+        ],
+        paint: {
+          "line-color": "#dc2626",
+          "line-width": 6,
+          "line-opacity": 1,
+        },
+      });
+
+      map.addLayer({
         id: "query-results-points",
         type: "circle",
         source: "query-results",
@@ -175,6 +283,16 @@ function MapPanel({ geojson = EMPTY_GEOJSON, title = "Map Results" }) {
         }
 
         const properties = feature.properties ?? {};
+
+        const clickedUid = String(
+          properties.parcel_uid ?? ""
+        ).toUpperCase();
+
+        if (clickedUid) {
+          setClickedParcelUid((currentUid) =>
+            currentUid === clickedUid ? null : clickedUid
+          );
+        }
 
         const statusLabel = String(
           properties.status ?? "Unknown"
@@ -249,6 +367,7 @@ function MapPanel({ geojson = EMPTY_GEOJSON, title = "Map Results" }) {
   }, []);
 
   useEffect(() => {
+    setClickedParcelUid(null);
     const map = mapRef.current;
 
     if (!map || !map.isStyleLoaded()) {

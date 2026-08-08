@@ -4,6 +4,25 @@ import { useEffect, useRef, useState } from "react";
 import MapPanel from "./MapPanel";
 import "./App.css";
 
+function getTextContent(children) {
+  if (
+    typeof children === "string" ||
+    typeof children === "number"
+  ) {
+    return String(children);
+  }
+
+  if (Array.isArray(children)) {
+    return children.map(getTextContent).join("");
+  }
+
+  if (children?.props?.children) {
+    return getTextContent(children.props.children);
+  }
+
+  return "";
+}
+
 function App() {
   const [messages, setMessages] = useState([
     {
@@ -18,7 +37,10 @@ function App() {
     type: "FeatureCollection",
     features: [],
   });
+  const [mapTitle, setMapTitle] = useState("Current Parcels");
   const messagesEndRef = useRef(null);
+
+  const [selectedParcel, setSelectedParcel] = useState(null);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({
@@ -47,6 +69,19 @@ function App() {
     loadCurrentParcels();
   }, []);
 
+  function focusParcel(parcelUid) {
+    setSelectedParcel((currentSelection) => {
+      if (currentSelection?.parcelUid === parcelUid) {
+        return null;
+      }
+
+      return {
+        parcelUid,
+        requestId: Date.now(),
+      };
+    });
+  }
+
   async function sendMessage() {
     const trimmedInput = input.trim();
 
@@ -66,6 +101,7 @@ function App() {
 
     setInput("");
     setIsLoading(true);
+    setSelectedParcel(null);
 
     try {
       const response = await fetch("http://127.0.0.1:8000/chat", {
@@ -84,6 +120,18 @@ function App() {
       }
 
       const data = await response.json();
+
+      if (data.geojson?.features?.length > 0) {
+        setGeojson(data.geojson);
+
+        setMapTitle(
+          data.geojson.features.length === 1
+            ? "Parcel Result"
+            : "Query Results"
+        );
+      }
+
+      console.log("Chat response:", data);
 
       const assistantMessage = {
         role: "assistant",
@@ -136,7 +184,45 @@ function App() {
                   {message.role === "user" ? "You" : "Assistant"}
                 </span>
                 <div className="message-content">
-                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                  <ReactMarkdown
+                    remarkPlugins={[remarkGfm]}
+                    components={{
+                      table: ({ children }) => (
+                        <div className="table-wrapper">
+                          <table>{children}</table>
+                        </div>
+                      ),
+
+                      td: ({ children }) => {
+                        const cellText = getTextContent(children);
+
+                        const parcelMatch = cellText.match(/\bPAR-\d+\b/i);
+
+                        if (!parcelMatch) {
+                          return <td>{children}</td>;
+                        }
+
+                        const parcelUid = parcelMatch[0].toUpperCase();
+
+                        return (
+                          <td>
+                            <button
+                              type="button"
+                              className={
+                                selectedParcel?.parcelUid === parcelUid
+                                  ? "parcel-link selected"
+                                  : "parcel-link"
+                              }
+                              onClick={() => focusParcel(parcelUid)}
+                              title={`Zoom to ${parcelUid}`}
+                            >
+                              {children}
+                            </button>
+                          </td>
+                        );
+                      },
+                    }}
+                  >
                     {message.text}
                   </ReactMarkdown>
                 </div>
@@ -174,7 +260,11 @@ function App() {
           </div>
         </section>
         <section className="map-panel">
-          <MapPanel geojson={geojson} />
+          <MapPanel
+            geojson={geojson}
+            title={mapTitle}
+            selectedParcel={selectedParcel}
+          />
         </section>
       </main>
     </div>

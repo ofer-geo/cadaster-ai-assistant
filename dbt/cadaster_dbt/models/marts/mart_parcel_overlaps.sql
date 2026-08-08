@@ -38,7 +38,12 @@ overlap_candidates as (
         ST_Area(a.geom) as parcel_area_m2_1,
         ST_Area(b.geom) as parcel_area_m2_2,
 
-        ST_Intersection(a.geom, b.geom) as overlap_geom
+        ST_Multi(
+            ST_CollectionExtract(
+                ST_Intersection(a.geom, b.geom),
+                3
+            )
+        ) as overlap_geom
 
     from current_parcels a
 
@@ -79,6 +84,8 @@ select
 
     parcel_area_m2_1,
     parcel_area_m2_2,
+
+    overlap_geom,
 
     ST_Area(overlap_geom) as overlap_area_m2,
 
