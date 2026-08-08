@@ -6,12 +6,15 @@ from backend.agent.assistant import CadasterAssistant
 from backend.database.repository import get_current_parcels_geojson
 from typing import Any
 import os
+import logging
 
 
 app = FastAPI(
     title="Cadaster AI Assistant API",
     version="1.0.0",
 )
+
+logger = logging.getLogger(__name__)
 
 # React currently runs on this address.
 allowed_origins = [
@@ -57,6 +60,8 @@ def current_parcels_geojson() -> dict:
         return get_current_parcels_geojson()
 
     except Exception as exc:
+        logger.exception("Failed to load current parcels")
+        
         raise HTTPException(
             status_code=500,
             detail="Could not load current parcels.",
