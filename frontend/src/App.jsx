@@ -4,6 +4,12 @@ import { useEffect, useRef, useState } from "react";
 import MapPanel from "./MapPanel";
 import "./App.css";
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
+if (!API_BASE_URL) {
+  throw new Error("VITE_API_BASE_URL is not configured.");
+}
+
 function getTextContent(children) {
   if (
     typeof children === "string" ||
@@ -52,7 +58,7 @@ function App() {
     async function loadCurrentParcels() {
       try {
         const response = await fetch(
-          "http://127.0.0.1:8000/parcels/current/geojson"
+          `${API_BASE_URL}/parcels/current/geojson`
         );
 
         if (!response.ok) {
@@ -104,7 +110,7 @@ function App() {
     setSelectedParcel(null);
 
     try {
-      const response = await fetch("http://127.0.0.1:8000/chat", {
+      const response = await fetch(`${API_BASE_URL}/chat`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
