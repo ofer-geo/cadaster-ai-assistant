@@ -413,8 +413,6 @@ input {
   outline-offset: 2px;
 }
 
-I’d also slightly change your header paragraph rule so there’s a bit more breathing room:
-
 .app-header p {
   margin: 0;
   color: #627d98;
