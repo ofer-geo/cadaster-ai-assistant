@@ -368,3 +368,55 @@ input {
   font-weight: 700;
   text-decoration-thickness: 3px;
 }
+
+.example-questions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+
+.example-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #627d98;
+}
+
+.example-questions button {
+  padding: 7px 12px;
+  border: 1px solid #bcccdc;
+  border-radius: 999px;
+
+  background: #f8fafc;
+  color: #334e68;
+
+  font-size: 13px;
+  font-weight: 500;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.example-questions button:hover {
+  background: #eaf2f8;
+  border-color: #829ab1;
+  transform: translateY(-1px);
+}
+
+.example-questions button:focus-visible {
+  outline: 2px solid #486581;
+  outline-offset: 2px;
+}
+
+I’d also slightly change your header paragraph rule so there’s a bit more breathing room:
+
+.app-header p {
+  margin: 0;
+  color: #627d98;
+  line-height: 1.5;
+}

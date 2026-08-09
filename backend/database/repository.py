@@ -88,8 +88,7 @@ def get_current_parcels_by_area(
 
     with get_connection() as conn:
         with conn.cursor(row_factory=dict_row) as cur:
-            cur.execute(
-                """
+            query = """
                 SELECT
                     parcel_version_id,
                     parcel_uid,
@@ -101,11 +100,21 @@ def get_current_parcels_by_area(
                     district_name
                 FROM analytics.mart_current_parcels
                 WHERE lower(district_name) = lower(%s)
-                  AND (%s IS NULL OR status = %s)
+            """
+
+            params = [area_name]
+
+            if status is not None:
+                query += """
+                    AND lower(status) = lower(%s)
+                """
+                params.append(status)
+
+            query += """
                 ORDER BY parcel_uid, status
-                """,
-                (area_name, status, status),
-            )
+            """
+
+            cur.execute(query, params)
 
             return cur.fetchall()
 

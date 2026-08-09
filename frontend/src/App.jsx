@@ -175,7 +175,44 @@ function App() {
     <div className="app">
       <header className="app-header">
         <h1>Cadaster AI Assistant</h1>
-        <p>Ask questions about parcels, applications, and cadastral data.</p>
+
+        <p>
+          Explore cadastral data using natural language. Ask about parcels,
+          spatial relationships, statistics, and history.
+        </p>
+
+        <div className="example-questions">
+          <span className="example-label">Try an example:</span>
+
+          <button
+            type="button"
+            onClick={() =>
+              setInput(
+                "Can you show me the current approved parcels in District Mjini?"
+              )
+            }
+          >
+            Approved parcels in Mjini
+          </button>
+
+          <button
+            type="button"
+            onClick={() =>
+              setInput("What overlaps exist in the cadastral database?")
+            }
+          >
+            Cadastral overlaps
+          </button>
+
+          <button
+            type="button"
+            onClick={() =>
+              setInput("Can you show me the history of parcel PAR-101?")
+            }
+          >
+            PAR-101 history
+          </button>
+        </div>
       </header>
 
       <main className="main-layout">
