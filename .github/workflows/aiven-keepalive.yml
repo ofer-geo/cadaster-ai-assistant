@@ -1,0 +1,28 @@
+name: Aiven Keep Alive
+
+on:
+  schedule:
+    # Every 4 hours. GitHub schedules use UTC.
+    - cron: "17 */4 * * *"
+
+  # Allows you to test it manually from the Actions page.
+  workflow_dispatch:
+
+jobs:
+  query-database:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Install PostgreSQL client
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
+
+      - name: Connect to Aiven and run health check
+        env:
+          DATABASE_URL: ${{ secrets.AIVEN_DATABASE_URL }}
+        run: |
+          psql "$DATABASE_URL" \
+            --set=ON_ERROR_STOP=1 \
+            --command="SELECT current_timestamp AS checked_at, 1 AS database_available;"
