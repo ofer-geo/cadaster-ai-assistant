@@ -116,4 +116,4 @@ what the LLM may do.
 Python · FastAPI · LangChain / LangGraph · Google Gemini · dbt · PostgreSQL / PostGIS · React ·
 Vite · MapLibre GL · Docker · Netlify / Aiven
 
-Author: **Ofer Shahal**, [portfolio](https://ofer-geo.github.io/personal_portfolio/projects/cadaster-ai-assistant/)
+Licence: [MIT](LICENSE). Author: **Ofer Shahal**, [portfolio](https://ofer-geo.github.io/personal_portfolio/projects/cadaster-ai-assistant/)
